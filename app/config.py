@@ -11,14 +11,35 @@ class ConfigSettings(BaseSettings):
         extra="ignore",  # игнорировать лишние переменные
     )
 
-    NAME: str = Field(default="ID", description="Название приложения")
-    HOST: str = Field(default="127.0.0.1", description="Хост приложения")
-    PORT: str = Field(default="8000", description="Порт приложения")
-    DATABASE_URL: str = Field(default="postgresql+psycopg://postgres:postgres@localhost:5432", description="URL базы данных")
-    JWT_SECRET_KEY: str = Field(default="change_me_to_a_long_random_secret", description="Секретный ключ для подписи JWT")
-    JWT_ALGORITHM: str = Field(default="HS256", description="Алгоритм подписи JWT")
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=15, description="Время жизни access токена в минутах")
-    REFRESH_TOKEN_EXPIRE_DAYS: int = Field(default=365, description="Время жизни refresh токена в днях")
+    DATABASE_URL: str = Field(
+        default="postgresql://postgres:postgres@localhost:5432/auth_db",
+        description="Путь к базе данных",
+    )
+
+    SECRET_KEY: str = Field(
+        default="your-super-secret-key-change-in-production",
+        description="Секретный ключ",
+    )
+
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(
+        default=15,
+        description="Жизнь токена в минутах",
+    )
+
+    REFRESH_TOKEN_EXPIRE_DAYS: int = Field(
+        default=30,
+        description="Жизнь рефреш токена днях",
+    )
+
+    SECURE_COOKIES: bool = Field(
+        default=True,
+        description="Включить в продакшене с HTTPS",
+    )
+
+    COOKIE_DOMAIN: str | None = Field(
+        default=None,
+        description="Для кросс-доменных куки",
+    )
 
 
 IN_DOCKER = os.getenv("IN_DOCKER", "").lower() in ("1", "true", "yes")
@@ -44,5 +65,4 @@ if not IN_DOCKER and not env_path.exists():
             f"- Файл: {env_path.absolute()}"
         )
 
-# Создание экземпляра конфигурации
 config = ConfigSettings()
