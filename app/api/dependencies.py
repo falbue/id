@@ -1,7 +1,7 @@
 from fastapi import Depends, HTTPException, status, Cookie, Request
 from sqlmodel import Session, select
 from app.database import get_session
-from app.models.user import User
+from app.models.user import Users
 from app.core.security import decode_token
 
 
@@ -9,7 +9,7 @@ def get_current_user_secure(
     request: Request,
     session: Session = Depends(get_session),
     access_token_cookie: str | None = Cookie(None, alias="access_token"),
-) -> User:
+) -> Users:
 
     token = None
 
@@ -41,7 +41,7 @@ def get_current_user_secure(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    user = session.exec(select(User).where(User.id == user_id)).first()
+    user = session.exec(select(Users).where(Users.id == user_id)).first()
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
