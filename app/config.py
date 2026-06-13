@@ -41,6 +41,16 @@ class ConfigSettings(BaseSettings):
         description="Для кросс-доменных куки",
     )
 
+    PREFIX_AUTH: str = Field(
+        default="/api/auth",
+        description="Перфикс для роутов авторизации",
+    )
+
+    PREFIX_TOKENS: str = Field(
+        default="/api/tokens",
+        description="Перфикс для роутов c токенами",
+    )
+
 
 IN_DOCKER = os.getenv("IN_DOCKER", "").lower() in ("1", "true", "yes")
 env_path = Path(".env")

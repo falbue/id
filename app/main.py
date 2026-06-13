@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from app.database import create_db_and_tables
 from app.api import auth, tokens
 from fastapi.middleware.cors import CORSMiddleware
+from config import config
 
 app = FastAPI(
     title="Auth Microservice",
@@ -11,7 +12,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Ваш фронтенд или "*" для тестов
+    allow_origins=["*"],  # Ваш фронтенд или "*" для тестов
     allow_credentials=True,  # ВАЖНО: разрешить отправку куки!
     allow_methods=["*"],
     allow_headers=["*"],
@@ -23,5 +24,5 @@ def on_startup():
     create_db_and_tables()
 
 
-app.include_router(auth.router, prefix="/api")
-app.include_router(tokens.router, prefix="/api")
+app.include_router(auth.router, prefix=config.PREFIX_AUTH)
+app.include_router(tokens.router, prefix=config.PREFIX_TOKENS)

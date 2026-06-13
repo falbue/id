@@ -1,0 +1,15 @@
+services:
+  id:
+    build: .
+    env_file:
+      - .env
+    environment:
+      - IN_DOCKER=1
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    networks:
+      - db-net
+      - web-net
+    volumes:
+      - ./data:/data
