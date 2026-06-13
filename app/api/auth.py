@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status, Request
 from sqlmodel import Session, select
 from app.database import get_session
-from app.models.user import User
-from app.models.token import RefreshToken
+from app.models.user import Users
+from app.models.token import RefreshTokens
 from app.schemas.user import UserRegister, UserLogin, UserResponse
 from app.schemas.token import AccessTokenResponse, TokenPair
 from app.core.security import (
@@ -35,7 +35,7 @@ def set_refresh_cookie(response: Response, refresh_token: str):
 
 def create_and_store_refresh_token(
     session: Session, user_id: int, request: Request
-) -> tuple[str, str]:
+) -> str:
     """Создает и сохраняет refresh токен в БД, возвращает (raw_token, access_token)"""
     raw_refresh_token, refresh_token_hash = create_refresh_token_data(user_id)
 
@@ -47,7 +47,7 @@ def create_and_store_refresh_token(
     device_info = f"IP: {host}, UA: {request.headers.get('user-agent', 'Unknown')}"
     expires_at = datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
 
-    db_token = RefreshToken(
+    db_token = RefreshTokens(
         user_id=user_id,
         token_hash=refresh_token_hash,
         device_info=device_info,
@@ -70,16 +70,20 @@ def register(
 ):
     """Регистрация пользователя с выдачей токенов"""
     if user_in.email:
-        existing = session.exec(select(User).where(User.email == user_in.email)).first()
+        existing = session.exec(
+            select(Users).where(Users.email == user_in.email)
+        ).first()
         if existing:
             raise HTTPException(status_code=400, detail="Email уже зарегистрирован")
 
     if user_in.phone:
-        existing = session.exec(select(User).where(User.phone == user_in.phone)).first()
+        existing = session.exec(
+            select(Users).where(Users.phone == user_in.phone)
+        ).first()
         if existing:
             raise HTTPException(status_code=400, detail="Телефон уже зарегистрирован")
 
-    db_user = User(
+    db_user = Users(
         email=user_in.email,
         phone=user_in.phone,
         password_hash=get_password_hash(user_in.password),
@@ -103,11 +107,11 @@ def login(
     session: Session = Depends(get_session),
 ):
     """Вход пользователя с выдачей токенов"""
-    statement = select(User)
+    statement = select(Users)
     if user_in.email:
-        statement = statement.where(User.email == user_in.email)
+        statement = statement.where(Users.email == user_in.email)
     else:
-        statement = statement.where(User.phone == user_in.phone)
+        statement = statement.where(Users.phone == user_in.phone)
 
     user = session.exec(statement).first()
 
@@ -136,17 +140,17 @@ def refresh_token(
 
     try:
         payload = decode_token(refresh_token, expected_type="refresh")
-        user_id = int(payload.get("sub"))
+        user_id = int(payload.get("sub"))  # type: ignore
     except ValueError:
         raise HTTPException(status_code=401, detail="Недействительный рефреш-токен")
 
     token_hash = hash_refresh_token(refresh_token)
 
     db_token = session.exec(
-        select(RefreshToken).where(
-            RefreshToken.token_hash == token_hash,
-            RefreshToken.user_id == user_id,
-            RefreshToken.is_revoked == False,
+        select(RefreshTokens).where(
+            RefreshTokens.token_hash == token_hash,
+            RefreshTokens.user_id == user_id,
+            RefreshTokens.is_revoked == False,
         )
     ).first()
 
@@ -163,7 +167,7 @@ def refresh_token(
     new_raw_refresh, new_refresh_hash = create_refresh_token_data(user_id)
 
     expires_at = datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
-    new_db_token = RefreshToken(
+    new_db_token = RefreshTokens(
         user_id=user_id,
         token_hash=new_refresh_hash,
         device_info=db_token.device_info,
@@ -189,7 +193,7 @@ def logout(
     if refresh_token:
         token_hash = hash_refresh_token(refresh_token)
         db_token = session.exec(
-            select(RefreshToken).where(RefreshToken.token_hash == token_hash)
+            select(RefreshTokens).where(RefreshTokens.token_hash == token_hash)
         ).first()
 
         if db_token:

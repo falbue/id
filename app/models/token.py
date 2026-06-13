@@ -1,12 +1,9 @@
 from datetime import datetime
-from typing import Optional
 from sqlmodel import SQLModel, Field, Relationship
-from app.models.user import User
+from app.models.user import Users
 
 
-class RefreshToken(SQLModel, table=True):
-    __tablename__ = "refresh_tokens"
-
+class RefreshTokens(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="users.id", index=True)
 
@@ -19,4 +16,4 @@ class RefreshToken(SQLModel, table=True):
     is_revoked: bool = Field(default=False, description="Мягкое удаление (отзыв)")
 
     # Связь с пользователем
-    user: User = Relationship(back_populates="refresh_tokens")
+    user: Users = Relationship(back_populates="refresh_tokens")
