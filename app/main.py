@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from app.database import create_db_and_tables
 from app.api import auth, tokens
 from fastapi.middleware.cors import CORSMiddleware
-from config import config
+from app.config import config
 
 app = FastAPI(
     title="Auth Microservice",
