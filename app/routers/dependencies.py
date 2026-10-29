@@ -1,8 +1,9 @@
-from fastapi import Depends, HTTPException, status, Cookie, Request
-from sqlmodel import Session, select
-from app.database import get_session
-from app.models.user import Users
 from app.core.security import decode_token
+from app.database import get_session
+from fastapi import Cookie, Depends, HTTPException, Request, status
+from sqlmodel import Session, select
+
+from app.entities.user import Users
 
 
 def get_current_user_secure(

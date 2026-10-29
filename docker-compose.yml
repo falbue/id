@@ -9,7 +9,7 @@ services:
     volumes:
       - /data/databases/falbue/test/postgres:/var/lib/postgres
     ports:
-      - "127.0.0.1:5433:5432"
+      - "127.0.0.1:5432:5432"
     networks:
       - db-net
 
