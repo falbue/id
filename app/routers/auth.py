@@ -4,13 +4,12 @@ from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response
 from sqlmodel import Session, select
 
 from app import config as settings
-from app.entities.token import RefreshTokens
+from app.entities.token import AccessTokenResponse, RefreshTokens
 from app.entities.user import UserCreate, UserLogin, UserResponse, Users
-from app.schemas.token import AccessTokenResponse
 from app.services.database import AsyncSession, get_async_session
 from app.services.security import (
     create_access_token,
-    create_refresh_token_data,
+    create_refresh_token,
     decode_token,
     get_password_hash,
     hash_refresh_token,
@@ -39,7 +38,7 @@ async def create_and_store_refresh_token(
     session: AsyncSession, user_id: int, request: Request
 ) -> str:
     """Создает и сохраняет refresh токен в БД, возвращает (raw_token, access_token)"""
-    raw_refresh_token, refresh_token_hash = create_refresh_token_data(user_id)
+    raw_refresh_token, refresh_token_hash = create_refresh_token(user_id)
 
     if request.client is None or request.client.host is None:
         host = "0.0.0.0"
@@ -112,14 +111,18 @@ async def register(
     return new_user
 
 
-@router.post("/login", response_model=AccessTokenResponse)
-def login(
+@router.post(
+    "/login",
+    summary="Авторизация пользователя",
+    description="Авторизация пользователя и выдача токенов",
+    response_model=AccessTokenResponse,
+)
+async def login(
     user_in: UserLogin,
     request: Request,
     response: Response,
     session: AsyncSession = _session_dependency,
 ):
-    """Вход пользователя с выдачей токенов"""
     statement = select(Users)
     if user_in.email:
         statement = statement.where(Users.email == user_in.email)
