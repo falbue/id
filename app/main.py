@@ -1,19 +1,25 @@
 from fastapi import FastAPI
-from app.database import create_db_and_tables
-from app.api import auth, tokens
 from fastapi.middleware.cors import CORSMiddleware
-from app.config import config
+from scalar_fastapi import get_scalar_api_reference
+
+from app import config, setup_logger
+from app.routers import auth
+from app.services.database import create_db_and_tables
+
+log = setup_logger("APP")
 
 app = FastAPI(
-    title="Auth Microservice",
-    description="Сервис авторизации на FastAPI + SQLModel",
-    version="0.1.0",
+    title="id",
+    description="",
+    version="development",
+    docs_url=None,
+    redoc_url=None,
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Ваш фронтенд или "*" для тестов
-    allow_credentials=True,  # ВАЖНО: разрешить отправку куки!
+    allow_origins=["*"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -24,5 +30,12 @@ def on_startup():
     create_db_and_tables()
 
 
-app.include_router(auth.router, prefix=config.PREFIX_AUTH)
-app.include_router(tokens.router, prefix=config.PREFIX_TOKENS)
+@app.get("/", include_in_schema=False)
+async def scalar_html():
+    return get_scalar_api_reference(
+        openapi_url=app.openapi_url,
+        title=app.title,
+    )
+
+
+app.include_router(auth.router, prefix=f"{config.PREFIX_AUTH}", tags=["Аутентификация"])

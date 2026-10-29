@@ -1,22 +1,24 @@
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status, Request
+from datetime import datetime, timedelta
+
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
 from sqlmodel import Session, select
-from app.database import get_session
-from app.models.user import Users
+
+from app import config as settings
 from app.models.token import RefreshTokens
-from app.schemas.user import UserRegister, UserLogin, UserResponse
+from app.models.user import Users
 from app.schemas.token import AccessTokenResponse, TokenPair
-from app.core.security import (
-    decode_token,
-    get_password_hash,
-    verify_password,
+from app.schemas.user import UserLogin, UserRegister, UserResponse
+from app.services.database import get_async_session
+from app.services.security import (
     create_access_token,
     create_refresh_token_data,
+    decode_token,
+    get_password_hash,
     hash_refresh_token,
+    verify_password,
 )
-from datetime import datetime, timedelta
-from app.config import config as settings
 
-router = APIRouter(prefix="/auth", tags=["Authentication"])
+router = APIRouter()
 
 
 def set_refresh_cookie(response: Response, refresh_token: str):
@@ -66,7 +68,7 @@ def register(
     user_in: UserRegister,
     request: Request,
     response: Response,
-    session: Session = Depends(get_session),
+    session: Session = Depends(get_async_session),
 ):
     """Регистрация пользователя с выдачей токенов"""
     if user_in.email:
@@ -104,7 +106,7 @@ def login(
     user_in: UserLogin,
     request: Request,
     response: Response,
-    session: Session = Depends(get_session),
+    session: Session = Depends(get_async_session),
 ):
     """Вход пользователя с выдачей токенов"""
     statement = select(Users)
@@ -132,7 +134,7 @@ def login(
 def refresh_token(
     response: Response,
     refresh_token: str = Cookie(None),
-    session: Session = Depends(get_session),
+    session: Session = Depends(get_async_session),
 ):
     """Обновление access токена с использованием refresh токена из куки"""
     if not refresh_token:
@@ -184,7 +186,7 @@ def refresh_token(
 def logout(
     response: Response,
     refresh_token: str = Cookie(None),
-    session: Session = Depends(get_session),
+    session: Session = Depends(get_async_session),
 ):
     """
     Logout endpoint - отзывает токен и удаляет куку

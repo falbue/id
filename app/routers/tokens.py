@@ -1,11 +1,13 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
+
 from app.database import get_session
-from app.models.user import User
 from app.models.token import RefreshToken
+from app.models.user import User
+from app.routers.dependencies import get_current_user_secure
 from app.schemas.token import RefreshTokenInfo
-from app.api.dependencies import get_current_user_secure
-from datetime import datetime
 
 router = APIRouter(prefix="/tokens", tags=["Refresh Tokens"])
 

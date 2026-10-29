@@ -1,17 +1,17 @@
 services:
-  id:
-    build: .
-    env_file:
-      - .env
-    environment:
-      - IN_DOCKER=1
-    ports:
-      - "8000:8000"
+  db:
+    image: postgres:latest
     restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: auth
+    volumes:
+      - /data/databases/falbue/test/postgres:/var/lib/postgres
+    ports:
+      - "127.0.0.1:5433:5432"
     networks:
       - db-net
-    volumes:
-      - ./data:/data
 
 networks:
   db-net:

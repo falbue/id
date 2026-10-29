@@ -1,7 +1,8 @@
 import os
 from pathlib import Path
-from pydantic_settings import BaseSettings, SettingsConfigDict
+
 from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class ConfigSettings(BaseSettings):
@@ -12,7 +13,7 @@ class ConfigSettings(BaseSettings):
     )
 
     DATABASE_URL: str = Field(
-        default="postgresql://postgres:postgres@localhost:5432/auth_db",
+        default="postgresql://postgres:postgres@localhost:5432/auth",
         description="Путь к базе данных",
     )
 
@@ -56,23 +57,22 @@ IN_DOCKER = os.getenv("IN_DOCKER", "").lower() in ("1", "true", "yes")
 env_path = Path(".env")
 
 if not IN_DOCKER and not env_path.exists():
-    if not env_path.exists():
-        with open(env_path, "w", encoding="utf-8") as f:
-            for field_name, field_info in ConfigSettings.model_fields.items():
-                desc = field_info.description or ""
-                default = field_info.get_default()
-                if isinstance(default, bool):
-                    default = "true" if default else "false"
-                else:
-                    default = str(default)
+    with open(env_path, "w", encoding="utf-8") as f:
+        for field_name, field_info in ConfigSettings.model_fields.items():
+            desc = field_info.description or ""
+            default = field_info.get_default()
+            if isinstance(default, bool):
+                default = "true" if default else "false"
+            else:
+                default = str(default)
 
-                f.write(f"# {desc}\n")
-                f.write(f"{field_name}={default}\n\n")
+            f.write(f"# {desc}\n")
+            f.write(f"{field_name}={default}\n\n")
 
-        raise RuntimeError(
-            "Файл .env не найден и был создан со шаблоном.\n"
-            "Отредактируйте параметры перед запуском:\n"
-            f"- Файл: {env_path.absolute()}"
-        )
+    raise RuntimeError(
+        "Файл .env не найден и был создан со шаблоном.\n"
+        "Отредактируйте параметры перед запуском:\n"
+        f"- Файл: {env_path.absolute()}"
+    )
 
 config = ConfigSettings()

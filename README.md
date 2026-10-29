@@ -2,26 +2,15 @@
 
 Микросервис аутентификации на FastAPI и SQLModel. Реализует вход, регистрацию и управление сессиями через JWT токены
 
-## Стек
+## Локальный запуск
 
-*   FastAPI
-*   SQLModel (SQLAlchemy)
-*   JWT (PyJWT)
-*   Passlib (bcrypt)
-
-## Запуск
-
-1. Установите зависимости:
+1. Установить зависимости
+2. Запусить сервер
 ```bash
-pip install -r requirements.txt
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-2. Фал .env создаётся при первом запуске
-
-3. Запустите сервер:
-```bash
-uvicorn app.main:app --reload
-```
+3. Фал .env создаётся при первом запуске
 
 Документация API доступна по адресу: `http://localhost:8000/docs`
 
@@ -34,10 +23,3 @@ uvicorn app.main:app --reload
 *   `GET /tokens/` — Список активных сессий
 *   `DELETE /tokens/{id}` — Отозвать конкретный токен
 *   `DELETE /tokens/all` — Выйти со всех устройств
-
-## Тестирование
-
-Для тестов можно использовать Bruno или Postman.
-*   При вызове `/auth/login` сохраните `access_token` из ответа.
-*   Для защищенных запросов добавляйте заголовок: `Authorization: Bearer <token>`.
-*   Refresh токен отправляется браузером/клиентом автоматически в куках.

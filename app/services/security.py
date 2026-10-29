@@ -1,10 +1,12 @@
+import hashlib
 from datetime import datetime, timedelta
 from typing import Optional
+
 import bcrypt
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-import hashlib
-from app.config import config as settings
+
+from app import config as settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
